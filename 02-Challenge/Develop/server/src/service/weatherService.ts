@@ -10,12 +10,14 @@ interface Coordinates {
 
 // TODO: Define an interface for the ForecastData object
 interface ForecastData {
-  dt: number;
-  main: {
-    temp: number;
-  };
-  weather: {
-    description: string;
+  list: {
+    dt: number;
+    main: {
+      temp: number;
+    };
+    weather: {
+      description: string;
+    }[];
   }[];
 }
 
@@ -23,9 +25,17 @@ interface ForecastData {
 class Weather {
   temperature: number;
   description: string;
-  forecast: ForecastData[]; 
+  forecast: {
+    dt: number;
+    main: {
+      temp: number;
+    };
+    weather: {
+      description: string;
+    }[];
+  }[];
 
-  constructor(temperature: number, description: string, forecast: ForecastData[]) {
+  constructor(temperature: number, description: string, forecast: { dt: number; main: { temp: number }; weather: { description: string }[] }[]) {
     this.temperature = temperature;
     this.description = description;
     this.forecast = forecast;
@@ -49,7 +59,7 @@ class WeatherService {
     if (!response.ok) {
       throw new Error('Failed to fetch location data');
     }
-    const data = await response.json();
+    const data: any = await response.json();
     if (!data.coord) {
       throw new Error('Invalid location data');
     }
@@ -84,23 +94,36 @@ class WeatherService {
   }
 
   // TODO: Create fetchWeatherData method
-  private async fetchWeatherData(coordinates: Coordinates): Promise<any> {
+  private async fetchWeatherData(coordinates: Coordinates): Promise<ForecastData> {
     const response = await fetch(this.buildWeatherQuery(coordinates));
     if (!response.ok) {
       throw new Error('Failed to fetch weather data');
     }
-    const weatherData = await response.json();
-    if (!weatherData.list) {
+    const data: unknown = await response.json();
+
+    if (!this.isForecastData(data)) {
       throw new Error('Invalid weather data');
     }
-    return weatherData;
+
+    return data;
+  }
+
+  // TODO: Create isForecastData method
+  private isForecastData(data: any): data is ForecastData {
+    return data && typeof data === 'object' && Array.isArray(data.list) && data.list.every((item: any) =>
+      typeof item.dt === 'number' &&
+      typeof item.main === 'object' &&
+      typeof item.main.temp === 'number' &&
+      Array.isArray(item.weather) &&
+      item.weather.every((weather: any) => typeof weather.description === 'string')
+    );
   }
 
   // TODO: Build parseCurrentWeather method
-  private parseCurrentWeather(weatherData: any): Weather {
+  private parseCurrentWeather(weatherData: ForecastData): Weather {
     const temperature = weatherData.list[0].main.temp;
     const description = weatherData.list[0].weather[0].description;
-    const forecast = weatherData.list.map((item: any) => ({
+    const forecast = weatherData.list.map((item) => ({
       dt: item.dt,
       main: item.main,
       weather: item.weather,
@@ -126,7 +149,9 @@ class WeatherService {
     this.cityName = city;
     const coordinates = await this.fetchAndDestructureLocationData();
     const weatherData = await this.fetchWeatherData(coordinates);
-    return this.parseCurrentWeather(weatherData);
+    const currentWeather = this.parseCurrentWeather(weatherData);
+    this.buildForecastArray(currentWeather); 
+    return currentWeather;
   }
 }
 
