@@ -1,6 +1,7 @@
 // TODO: Define a City class with name and id properties
 import fs from 'fs/promises';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 class City {
   constructor(public name: string, public id: string) {}
@@ -10,7 +11,7 @@ class HistoryService {
   private filePath: string;
 
   constructor() {
-      this.filePath = path.join(path.dirname(new URL(import.meta.url).pathname), 'searchHistory.json');
+    this.filePath = path.join(path.dirname(fileURLToPath(import.meta.url)), 'searchHistory.json');
   }
   // TODO: Define a read method that reads from the searchHistory.json file
   private async read(): Promise<any[]> {
