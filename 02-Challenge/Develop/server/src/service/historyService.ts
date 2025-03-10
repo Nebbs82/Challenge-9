@@ -43,7 +43,15 @@ class HistoryService {
   async addCity(cityName: string): Promise<void> {
     const cities = await this.getCities();
     const newCity = new City(cityName, this.generateId());
-    cities.push(newCity);
+
+    const doesExists = cities.findIndex(city => city.name === cityName)
+
+    if(doesExists >= 0) {
+      console.log("Already exists!")
+    } else {
+      cities.push(newCity);
+    }
+
     await this.write(cities);
 }
   // async addCity(city: string) {}
