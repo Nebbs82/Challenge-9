@@ -1,5 +1,6 @@
 # Weather Service
-  
+  ![Screenshot 2025-03-09 212307](https://github.com/user-attachments/assets/e0cdd4ca-f4ed-4c73-8e84-602c189dc7dc)
+
 
 
 
